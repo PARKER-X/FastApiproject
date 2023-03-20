@@ -7,16 +7,17 @@ from random import randrange
 
 app = FastAPI()
 
-my_posts = []
+
 
 
 class Post(BaseModel):
     title: str 
     content: str
     published: bool = True
-    rating: Optional[int] = None
+    # rating: Optional[int] = None
 
 
+my_posts = []
 def find_post(id):
     for p in my_posts:
         if p["id"] == id:
