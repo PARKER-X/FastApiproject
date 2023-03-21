@@ -3,6 +3,7 @@ from fastapi.params import Body
 from pydantic import BaseModel
 from typing import Optional
 from random import randrange
+import pyscopg2
 
 
 app = FastAPI()
@@ -17,7 +18,10 @@ class Post(BaseModel):
     # rating: Optional[int] = None
 
 
+# Database Connection
+
 my_posts = []
+
 def find_post(id):
     for p in my_posts:
         if p["id"] == id:
