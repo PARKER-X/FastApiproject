@@ -3,8 +3,8 @@ from fastapi.params import Body
 from pydantic import BaseModel
 from typing import Optional
 from random import randrange
-import pyscopg2
-from pyscopg2.extras import RealDictCursor
+import psycopg2
+from psycopg2.extras import RealDictCursor
 
 
 app = FastAPI()
@@ -26,7 +26,7 @@ try:
     print("Database connection was succesfull!")
 except Exception as error:
     print("Failed to connect database")
-    print("Error:",Error)
+    print("Error:",error)
 
 
 
