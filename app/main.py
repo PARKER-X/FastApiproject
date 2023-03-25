@@ -21,7 +21,7 @@ class Post(BaseModel):
 
 # Database Connection
 try:
-    conn = pyscopg2.connect(host="localhost", database='fastapi', user='postgres', password = 'password123', cursor_factory = RealDictCursor)
+    conn = psycopg2.connect(host="localhost", database='fastapi', user='postgres', password = 'password123', cursor_factory = RealDictCursor)
     cursor = conn.cursor()
     print("Database connection was succesfull!")
 except Exception as error:
