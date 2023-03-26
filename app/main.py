@@ -1,13 +1,29 @@
-from fastapi import FastAPI,Response,status,HTTPException
+from fastapi import FastAPI,Response,status,HTTPException, Depends
 from fastapi.params import Body
 from pydantic import BaseModel
 from typing import Optional
 from random import randrange
 import psycopg2
 from psycopg2.extras import RealDictCursor
+from sqlalchemy.orm import Session
+
+from . import models
+from .database import engine, SessionLocal
+
+
+models.Base.metadata.create_all(bind=engine)
 
 
 app = FastAPI()
+
+
+# Dependency
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 
 
@@ -41,6 +57,12 @@ def find_post(id):
 async def root():
     context = {"message":"Hello World"}
     return context
+
+
+@app.get("/sqlalchemy")
+def tests_posts(db: Session = Depends(get_db)):
+    return {"data":"success"}
+
 
 @app.get("/posts")
 def get_posts():
