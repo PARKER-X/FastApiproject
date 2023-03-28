@@ -93,7 +93,9 @@ def create_posts(post: Post, db:Session= Depends(get_db)):
     new_post = models.Post(title = post.title, content = post.content, published= post.published)
 
 
-    
+    db.add(new_post)
+    db.commit()
+    db.refresh(new_post)
 
     return {"data":new_post}
 
