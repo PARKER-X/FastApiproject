@@ -6,9 +6,10 @@ from random import randrange
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from sqlalchemy.orm import Session
+import time
 
 from . import models
-from .database import engine, SessionLocal
+from .database import engine, SessionLocal , get_db
 
 
 models.Base.metadata.create_all(bind=engine)
@@ -18,12 +19,12 @@ app = FastAPI()
 
 
 # Dependency
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+# def get_db():
+#     db = SessionLocal()
+#     try:
+#         yield db
+#     finally:
+#         db.close()
 
 
 
@@ -43,6 +44,7 @@ try:
 except Exception as error:
     print("Failed to connect database")
     print("Error:",error)
+    time.sleep(2)
 
 
 
@@ -61,18 +63,22 @@ async def root():
 
 @app.get("/sqlalchemy")
 def tests_posts(db: Session = Depends(get_db)):
-    return {"data":"success"}
-
-
-@app.get("/posts")
-def get_posts():
-    posts = cursor.execute(""" SELECT * FROM posts""")
-    posts = cursor.fetchall()
+    posts = db.query(models.Post).all()
     print(posts)
     return {"data":posts}
 
+
+@app.get("/posts")
+def get_posts(db: Session = Depends(get_db)):
+    # SQL
+    # posts = cursor.execute(""" SELECT * FROM posts""")
+    # posts = cursor.fetchall()
+    posts = db.query(models.Post).all()
+    return {"data":posts}
+
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
-def create_posts(post: Post):
+def create_posts(post: Post, db:Session= Depends(get_db)):
+    # Manual using list
     # post_dict = post.dict()
     # post_dict['id']  = randrange(0,1000)
     # my_posts.append(post_dict)
@@ -80,10 +86,14 @@ def create_posts(post: Post):
     # return {"data":post}
 
     # Use Sql
-    cursor.execute(""" INSERT INTO  posts (title, content, published) VALUES (%s, %s, %s) RETURNING * """,(post.title, post.content, post.published))
-    new_post = cursor.fetchone()
+    # cursor.execute(""" INSERT INTO  posts (title, content, published) VALUES (%s, %s, %s) RETURNING * """,(post.title, post.content, post.published))
+    # new_post = cursor.fetchone()
+    # conn.commit()
 
-    conn.commit()
+    new_post = models.Post(title = post.title, content = post.content, published= post.published)
+
+
+    
 
     return {"data":new_post}
 
