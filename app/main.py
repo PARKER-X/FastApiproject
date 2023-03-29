@@ -101,10 +101,13 @@ def create_posts(post: Post, db:Session= Depends(get_db)):
 
 
 @app.get('/posts/{id}')
-def get_post(id:int, response:Response):
-    cursor.execute(""" SELECT * from posts WHERE id = %s """, (str(id)))
-    post = cursor.fetchone()
+def get_post(id:int, response:Response, db: Session= Depends(get_db)):
+    # Sql
+    # cursor.execute(""" SELECT * from posts WHERE id = %s """, (str(id)))
+    # post = cursor.fetchone()
     # print(post)
+
+    post = db.query(models.Post).filter(models.Post.id==id).first()
     
    
 
@@ -122,24 +125,38 @@ def get_post(id:int, response:Response):
 #             return i 
 
 @app.delete('/posts/{id}')
-def delete_post(id:int):
+def delete_post(id:int, db: Session=Depends(get_db)):
+    # Manual
     # index = find_index_post(id)
-    cursor.execute(""" DELETE from posts WHERE id = %s RETURNING * """, (str(id)))
-    deleted_post = cursor.fetchone()
-    conn.commit()
 
-    if deleted_post == None:
+    # Sql
+    # cursor.execute(""" DELETE from posts WHERE id = %s RETURNING * """, (str(id)))
+    # deleted_post = cursor.fetchone()
+    # conn.commit()
+
+    deleted_post = db.query(models.Post).filter(models.Post.id==id)
+
+    if deleted_post.first() == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail = f" id {id} does not exist")
     # my_posts.pop(index)
+    deleted_post.delete(synchronize_session=False)
+    db.commit()
     return {'message':"my post is succesfully deleted"}
 
 @app.put('/posts/{id}')
-def update_post(id:int,post: Post):
+def update_post(id:int,ppost: Post, db:Session=Depends(get_db)):
+    # Manual
     # index = find_index_post(id)
-    cursor.execute(""" UPDATE posts SET title = %s , content = %s , published = %s WHERE id = %s RETURNING * """, (post.title,post.content,post.published,str(id)))
-    updated_post = cursor.fetchone()
-    conn.commit()
+
+    # Sql
+    # cursor.execute(""" UPDATE posts SET title = %s , content = %s , published = %s WHERE id = %s RETURNING * """, (post.title,post.content,post.published,str(id)))
+    # updated_post = cursor.fetchone()
+    # conn.commit()
+
+    post_query = db.query(models.Post).filter(models.Post.id==id)
+    updated_post = post_query.first()
+
 
     if updated_post == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
@@ -147,6 +164,9 @@ def update_post(id:int,post: Post):
     # post_dict = post.dict()
     # post_dict['id'] = id
     # my_posts[index] = post_dict
-    return {'message': updated_post}
+
+    post_query.update(ppost.dict(), synchronize_session=False)
+    db.commit()
+    return {'message': post_query.first()}
 
 
