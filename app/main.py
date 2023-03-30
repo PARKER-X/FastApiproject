@@ -1,14 +1,14 @@
 from fastapi import FastAPI,Response,status,HTTPException, Depends
 from fastapi.params import Body
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 from random import randrange
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from sqlalchemy.orm import Session
 import time
 
-from . import models
+from . import models, schema
 from .database import engine, SessionLocal , get_db
 
 
@@ -29,10 +29,10 @@ app = FastAPI()
 
 
 
-class Post(BaseModel):
-    title: str 
-    content: str
-    published: bool = True
+# class Post(BaseModel):
+#     title: str 
+#     content: str
+#     published: bool = True
     # rating: Optional[int] = None
 
 
@@ -68,16 +68,16 @@ def tests_posts(db: Session = Depends(get_db)):
     return {"data":posts}
 
 
-@app.get("/posts")
+@app.get("/posts", response_model=List[schema.Post])
 def get_posts(db: Session = Depends(get_db)):
     # SQL
     # posts = cursor.execute(""" SELECT * FROM posts""")
     # posts = cursor.fetchall()
     posts = db.query(models.Post).all()
-    return {"data":posts}
+    return posts
 
-@app.post("/posts", status_code=status.HTTP_201_CREATED)
-def create_posts(post: Post, db:Session= Depends(get_db)):
+@app.post("/posts", status_code=status.HTTP_201_CREATED, response_model=schema.Post)
+def create_posts(post: schema.PostCreate, db:Session= Depends(get_db)):
     # Manual using list
     # post_dict = post.dict()
     # post_dict['id']  = randrange(0,1000)
@@ -97,7 +97,7 @@ def create_posts(post: Post, db:Session= Depends(get_db)):
     db.commit()
     db.refresh(new_post)
 
-    return {"data":new_post}
+    return new_post
 
 
 @app.get('/posts/{id}')
@@ -144,8 +144,8 @@ def delete_post(id:int, db: Session=Depends(get_db)):
     db.commit()
     return {'message':"my post is succesfully deleted"}
 
-@app.put('/posts/{id}')
-def update_post(id:int,ppost: Post, db:Session=Depends(get_db)):
+@app.put('/posts/{id}',response_model=schema.Post)
+def update_post(id:int,ppost: schema.PostCreate, db:Session=Depends(get_db)):
     # Manual
     # index = find_index_post(id)
 
