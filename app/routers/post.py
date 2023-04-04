@@ -4,18 +4,21 @@ import time
 from typing import Optional, List
 
 
-from . import models, schema, utils
-from .. import  get_db
+from .. import models, schema, utils
+from ..database import  get_db
 
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/posts",
+    tags = ["posts"]
+)
 
-@router.get("/posts", response_model=List[schema.Post])
+@router.get("/", response_model=List[schema.Post])
 def get_posts(db: Session = Depends(get_db)):
     posts = db.query(models.Post).all()
     return posts
 
-@router.post("/posts", status_code=status.HTTP_201_CREATED, response_model=schema.Post)
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=schema.Post)
 def create_posts(post: schema.PostCreate, db:Session= Depends(get_db)):
     new_post = models.Post(title = post.title, content = post.content, published= post.published)
     db.add(new_post)
@@ -25,7 +28,7 @@ def create_posts(post: schema.PostCreate, db:Session= Depends(get_db)):
     return new_post
 
 
-@router.get('/posts/{id}')
+@router.get('/{id}')
 def get_post(id:int, response:Response, db: Session= Depends(get_db)):
     post = db.query(models.Post).filter(models.Post.id==id).first()
     
@@ -36,7 +39,7 @@ def get_post(id:int, response:Response, db: Session= Depends(get_db)):
     return {"post_detail":post}
 
 
-@router.delete('/posts/{id}')
+@router.delete('/{id}')
 def delete_post(id:int, db: Session=Depends(get_db)):
     deleted_post = db.query(models.Post).filter(models.Post.id==id)
 
@@ -48,7 +51,7 @@ def delete_post(id:int, db: Session=Depends(get_db)):
     db.commit()
     return {'message':"my post is succesfully deleted"}
 
-@router.put('/posts/{id}',response_model=schema.Post)
+@router.put('/{id}',response_model=schema.Post)
 def update_post(id:int,ppost: schema.PostCreate, db:Session=Depends(get_db)):
     post_query = db.query(models.Post).filter(models.Post.id==id)
     updated_post = post_query.first()

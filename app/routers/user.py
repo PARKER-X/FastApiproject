@@ -4,14 +4,19 @@ import time
 from typing import Optional, List
 
 
-from . import models, schema, utils
-from .. import  get_db
+from .. import models, schema, utils
+from ..database import  get_db
 
 
-router = APIRouter()
+router = APIRouter(
+    
+    prefix="/users",
+    tags = ["users"]
+
+)
 
 
-@router.post("/users", status_code=status.HTTP_201_CREATED)
+@router.post("/", status_code=status.HTTP_201_CREATED)
 def create_user(user: schema.UserCreate, db:Session=Depends(get_db)):
 
     # Hash the Password - user.password
@@ -26,7 +31,7 @@ def create_user(user: schema.UserCreate, db:Session=Depends(get_db)):
 
     return new_user
 
-@router.get('/users/{id}', response_model = schema.Userout)
+@router.get('/{id}', response_model = schema.UserOut)
 def get_user(id:int,db:Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.id == id).first()
 
