@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 
 from ..database import get_db
-from .. import schema, models
+from .. import schema, models, utils
 
 
 router = APIRouter(tags=['Authentication'])
@@ -16,4 +16,12 @@ def login(user_credentials: schema.UserLogin, db:Session=Depends(get_db)):
 
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Invalid Credientials")
+    
+    if not utils.verify(user_credentials.password , user.password):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,  detail=f"Invalid Credientials")
+    
+    #create a token
+    # return a token
+    return {"token":"example token"}
+
 
