@@ -6,23 +6,28 @@ correct=('F','G','H','I','J')
 
 
 def kbc(a,b):
-    d = random.randint(0,4)
-    print(que[d])
-    print(ans[d])
+    
     c=0
-    lock=input('Lock Answer-')
-    if lock in correct:
-        print('SHII JAVAB')
+    for i in range(5):
+        d = random.randint(0,4)
+        print(que[d])
+        print(ans[d])
+        lock=input('Lock Answer-')
         if lock in correct:
+            print('SHII JAVAB \n')
+            print("--"*10)
             print('Agla Padav')
             c+=1
-            # kbc(que, ans)
-    elif lock not in correct:
-        print('Galat Javaab')
+            
+        else:
+            print('Galat Javaab')
+            print("--"*10)
+            break
+        
+    print(f"Your score is {c} and u earn ${c*100}")
     
-    
+        
 
-for i in range(5):
-    
-    kbc(que, ans)
+
+kbc(que,ans)
     
