@@ -4,7 +4,7 @@ import time
 from typing import Optional, List
 
 
-from .. import models, schema, utils
+from .. import models, schema, utils, oauth2
 from ..database import  get_db
 
 
@@ -19,7 +19,7 @@ def get_posts(db: Session = Depends(get_db)):
     return posts
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=schema.Post)
-def create_posts(post: schema.PostCreate, db:Session= Depends(get_db)):
+def create_posts(post: schema.PostCreate, db:Session= Depends(get_db), user_id: int = Depends(oauth2.get_current_user)):
     new_post = models.Post(title = post.title, content = post.content, published= post.published)
     db.add(new_post)
     db.commit()
