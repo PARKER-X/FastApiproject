@@ -19,7 +19,7 @@ def get_posts(db: Session = Depends(get_db)):
     return posts
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=schema.Post)
-def create_posts(post: schema.PostCreate, db:Session= Depends(get_db), user_id: int = Depends(oauth2.get_current_user)):
+def create_posts(post: schema.PostCreate, db:Session= Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     new_post = models.Post(title = post.title, content = post.content, published= post.published)
     db.add(new_post)
     db.commit()
@@ -40,7 +40,7 @@ def get_post(id:int, response:Response, db: Session= Depends(get_db)):
 
 
 @router.delete('/{id}')
-def delete_post(id:int, db: Session=Depends(get_db)):
+def delete_post(id:int, db: Session=Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     deleted_post = db.query(models.Post).filter(models.Post.id==id)
 
     if deleted_post.first() == None:
@@ -52,7 +52,7 @@ def delete_post(id:int, db: Session=Depends(get_db)):
     return {'message':"my post is succesfully deleted"}
 
 @router.put('/{id}',response_model=schema.Post)
-def update_post(id:int,ppost: schema.PostCreate, db:Session=Depends(get_db)):
+def update_post(id:int,ppost: schema.PostCreate, db:Session=Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     post_query = db.query(models.Post).filter(models.Post.id==id)
     updated_post = post_query.first()
 
