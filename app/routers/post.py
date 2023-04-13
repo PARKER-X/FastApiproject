@@ -14,13 +14,15 @@ router = APIRouter(
 )
 
 @router.get("/", response_model=List[schema.Post])
-def get_posts(db: Session = Depends(get_db)):
-    posts = db.query(models.Post).all()
+def get_posts(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+    # posts = db.query(models.Post).all()
+    posts = db.query(models.Post).filter(models.Post.id == current_user.id).all()
     return posts
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=schema.Post)
 def create_posts(post: schema.PostCreate, db:Session= Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
-    new_post = models.Post(title = post.title, content = post.content, published= post.published)
+    # new_post = models.Post(title = post.title, content = post.content, published= post.published)
+    new_post = models.Post(owner_id = current_user.id, **post.dict())
     db.add(new_post)
     db.commit()
     db.refresh(new_post)
@@ -42,10 +44,14 @@ def get_post(id:int, response:Response, db: Session= Depends(get_db)):
 @router.delete('/{id}')
 def delete_post(id:int, db: Session=Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     deleted_post = db.query(models.Post).filter(models.Post.id==id)
-
+    post = deleted_post.first()
     if deleted_post.first() == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail = f" id {id} does not exist")
+    
+    if post.owner_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not Authorized!")
+
     
     deleted_post.delete(synchronize_session=False)
     db.commit()
@@ -59,6 +65,10 @@ def update_post(id:int,ppost: schema.PostCreate, db:Session=Depends(get_db), cur
     if updated_post == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail = f" Post with id {id} does not exist")
+    
+    
+    if updated_post.owner_id != oauth2.get_current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not Authorized!")
     
 
     post_query.update(ppost.dict(), synchronize_session=False)
