@@ -15,9 +15,19 @@ router = APIRouter(
 
 @router.get("/", response_model=List[schema.Post])
 def get_posts(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
-    # posts = db.query(models.Post).all()
-    posts = db.query(models.Post).filter(models.Post.id == current_user.id).all()
-    return posts
+    # Sql
+    # cursor.execute("""Select * from posts")
+    # post = cursor.fetchall()
+
+    post = db.query(models.Post).all()
+    
+    
+    # If you want to reterive only login user posts
+    # post = db.query(models.Post).filter(models.Post.owner_id == current_user.id).all()
+    # if post.owner_id != current_user.id:
+    #     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not Authorized!")
+
+    return post
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=schema.Post)
 def create_posts(post: schema.PostCreate, db:Session= Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
