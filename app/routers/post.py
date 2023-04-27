@@ -2,7 +2,7 @@ from fastapi import FastAPI,Response,status,HTTPException, Depends, APIRouter
 from sqlalchemy.orm import Session
 import time
 from typing import Optional, List
-
+from sqlalchemy import func
 
 from .. import models, schema, utils, oauth2
 from ..database import  get_db
@@ -13,7 +13,7 @@ router = APIRouter(
     tags = ["posts"]
 )
 
-@router.get("/", response_model=List[schema.Post])
+@router.get("/", response_model=List[schema.PostOut])
 def get_posts(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), limit:int=10, skip:int=0, search: Optional[str] = ""):
     # Sql
     # cursor.execute("""Select * from posts")
@@ -21,7 +21,13 @@ def get_posts(db: Session = Depends(get_db), current_user: int = Depends(oauth2.
 
     # post = db.query(models.Post).all()
 
-    post = db.query(models.Post).filter(models.Post.title.contains(search)).limit(limit).offset(skip).all()
+    # post = db.query(models.Post).filter(models.Post.title.contains(search)).limit(limit).offset(skip).all()
+
+    post = db.query(models.Post, func.count(models.Vote.post_id).label("votes")).join(
+        models.Vote, models.Vote.post_id == models.Post.id, isouter=True).group_by(models.Post.id).filter(
+        models.Post.title.contains(search)).limit(limit).offset(skip).all()
+    
+    return post
     
     
     # If you want to reterive only login user posts
@@ -44,7 +50,10 @@ def create_posts(post: schema.PostCreate, db:Session= Depends(get_db), current_u
 
 @router.get('/{id}')
 def get_post(id:int, response:Response, db: Session= Depends(get_db)):
-    post = db.query(models.Post).filter(models.Post.id==id).first()
+    # post = db.query(models.Post).filter(models.Post.id==id).first()
+
+    post = db.query(models.Post, func.count(models.Vote.post_id).label("votes")).join(
+        models.Vote, models.Vote.post_id == models.Post.id, isouter=True).group_by(models.Post.id).filter(models.Post.id==id).first()
     
     if not post:
         raise HTTPException(status_code = status.HTTP_404_NOT_FOUND,
