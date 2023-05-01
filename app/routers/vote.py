@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 router = APIRouter(
     prefix="/vote",
-    tages = ['vote'],
+    tags = ["vote"]
 )
 
 @router.post("/",status_code=status.HTTP_201_CREATED)

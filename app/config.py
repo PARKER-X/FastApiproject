@@ -7,10 +7,10 @@ class Settings(BaseSettings):
     database_name:str
     database_username:str
     secret_key:str
-    algorithim:str
+    algorithm:str
     access_token_expire_minutes:int
 
-    class config:
+    class Config:
         env_file = ".env"
 
 settings = Settings()
